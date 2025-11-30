@@ -162,6 +162,115 @@ class AIProvidersNotifier extends StateNotifier<List<AIProviderConfig>> {
     return config.models;
   }
 
+  /// 添加模型到指定提供商
+  Future<void> addModel(String providerId, ModelConfig model) async {
+    final index = state.indexWhere((p) => p.id == providerId);
+    if (index == -1) return;
+
+    final config = state[index];
+    // 检查是否已存在
+    if (config.models.any((m) => m.id == model.id)) return;
+
+    final updatedConfig = config.copyWith(
+      models: [...config.models, model],
+    );
+    
+    state = [
+      ...state.sublist(0, index),
+      updatedConfig,
+      ...state.sublist(index + 1),
+    ];
+    await _saveProviders();
+    
+    // 重新注册到 LLM 服务
+    _reregisterProvider(updatedConfig);
+  }
+
+  /// 更新提供商中的模型
+  Future<void> updateModel(String providerId, ModelConfig model) async {
+    final providerIndex = state.indexWhere((p) => p.id == providerId);
+    if (providerIndex == -1) return;
+
+    final config = state[providerIndex];
+    final modelIndex = config.models.indexWhere((m) => m.id == model.id);
+    if (modelIndex == -1) return;
+
+    final updatedModels = [
+      ...config.models.sublist(0, modelIndex),
+      model,
+      ...config.models.sublist(modelIndex + 1),
+    ];
+
+    final updatedConfig = config.copyWith(models: updatedModels);
+    
+    state = [
+      ...state.sublist(0, providerIndex),
+      updatedConfig,
+      ...state.sublist(providerIndex + 1),
+    ];
+    await _saveProviders();
+    
+    // 重新注册到 LLM 服务
+    _reregisterProvider(updatedConfig);
+  }
+
+  /// 从提供商删除模型
+  Future<void> removeModel(String providerId, String modelId) async {
+    final index = state.indexWhere((p) => p.id == providerId);
+    if (index == -1) return;
+
+    final config = state[index];
+    final updatedConfig = config.copyWith(
+      models: config.models.where((m) => m.id != modelId).toList(),
+    );
+    
+    state = [
+      ...state.sublist(0, index),
+      updatedConfig,
+      ...state.sublist(index + 1),
+    ];
+    await _saveProviders();
+    
+    // 重新注册到 LLM 服务
+    _reregisterProvider(updatedConfig);
+
+    // 如果当前选中的模型被删除，切换到其他模型
+    if (_ref.read(currentModelIdProvider) == modelId) {
+      _ref.read(currentModelIdProvider.notifier).state =
+          updatedConfig.models.firstOrNull?.id;
+    }
+  }
+
+  /// 重置提供商模型为默认列表
+  Future<void> resetModels(String providerId) async {
+    final index = state.indexWhere((p) => p.id == providerId);
+    if (index == -1) return;
+
+    final config = state[index];
+    final defaultModels = _getDefaultModels(config.type);
+    
+    final updatedConfig = config.copyWith(models: defaultModels);
+    
+    state = [
+      ...state.sublist(0, index),
+      updatedConfig,
+      ...state.sublist(index + 1),
+    ];
+    await _saveProviders();
+    
+    // 重新注册到 LLM 服务
+    _reregisterProvider(updatedConfig);
+  }
+
+  /// 重新注册 provider 到 LLM 服务
+  void _reregisterProvider(AIProviderConfig config) {
+    final llm = _ref.read(llmServiceProvider);
+    llm.unregisterProvider(config.id);
+    if (config.enabled) {
+      llm.registerProvider(config);
+    }
+  }
+
   List<ModelConfig> _getDefaultModels(AIProviderType type) {
     return switch (type) {
       AIProviderType.openai => defaultOpenAIModels,

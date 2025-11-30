@@ -14,7 +14,11 @@ _$AIProviderConfigImpl _$$AIProviderConfigImplFromJson(
       name: json['name'] as String,
       apiKey: json['apiKey'] as String?,
       baseUrl: json['baseUrl'] as String?,
+      apiPath: json['apiPath'] as String?,
       apiVersion: json['apiVersion'] as String?,
+      apiProtocol:
+          $enumDecodeNullable(_$APIProtocolTypeEnumMap, json['apiProtocol']) ??
+              APIProtocolType.openai,
       enabled: json['enabled'] as bool? ?? true,
       models: (json['models'] as List<dynamic>?)
               ?.map((e) => ModelConfig.fromJson(e as Map<String, dynamic>))
@@ -30,7 +34,9 @@ Map<String, dynamic> _$$AIProviderConfigImplToJson(
       'name': instance.name,
       'apiKey': instance.apiKey,
       'baseUrl': instance.baseUrl,
+      'apiPath': instance.apiPath,
       'apiVersion': instance.apiVersion,
+      'apiProtocol': _$APIProtocolTypeEnumMap[instance.apiProtocol]!,
       'enabled': instance.enabled,
       'models': instance.models,
     };
@@ -46,25 +52,40 @@ const _$AIProviderTypeEnumMap = {
   AIProviderType.custom: 'custom',
 };
 
+const _$APIProtocolTypeEnumMap = {
+  APIProtocolType.openai: 'openai',
+  APIProtocolType.claude: 'claude',
+  APIProtocolType.gemini: 'gemini',
+};
+
 _$ModelConfigImpl _$$ModelConfigImplFromJson(Map<String, dynamic> json) =>
     _$ModelConfigImpl(
       id: json['id'] as String,
-      name: json['name'] as String,
-      supportsStreaming: json['supportsStreaming'] as bool? ?? true,
+      nickname: json['nickname'] as String?,
+      type: $enumDecodeNullable(_$ModelTypeEnumMap, json['type']) ??
+          ModelType.chat,
       supportsVision: json['supportsVision'] as bool? ?? false,
+      supportsReasoning: json['supportsReasoning'] as bool? ?? false,
       supportsFunctionCalling:
           json['supportsFunctionCalling'] as bool? ?? false,
-      maxTokens: (json['maxTokens'] as num?)?.toInt(),
+      maxOutputTokens: (json['maxOutputTokens'] as num?)?.toInt(),
       contextWindow: (json['contextWindow'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$$ModelConfigImplToJson(_$ModelConfigImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'name': instance.name,
-      'supportsStreaming': instance.supportsStreaming,
+      'nickname': instance.nickname,
+      'type': _$ModelTypeEnumMap[instance.type]!,
       'supportsVision': instance.supportsVision,
+      'supportsReasoning': instance.supportsReasoning,
       'supportsFunctionCalling': instance.supportsFunctionCalling,
-      'maxTokens': instance.maxTokens,
+      'maxOutputTokens': instance.maxOutputTokens,
       'contextWindow': instance.contextWindow,
     };
+
+const _$ModelTypeEnumMap = {
+  ModelType.chat: 'chat',
+  ModelType.embedding: 'embedding',
+  ModelType.rerank: 'rerank',
+};

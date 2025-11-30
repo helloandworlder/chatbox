@@ -32,7 +32,7 @@ class ModelSelector extends ConsumerWidget {
     return TextButton.icon(
       onPressed: () => _showModelPicker(context, ref, providers),
       icon: const Icon(Icons.auto_awesome, size: 18),
-      label: Text(currentModel?.name ?? 'Select Model'),
+      label: Text(currentModel?.displayName ?? 'Select Model'),
     );
   }
 
@@ -75,7 +75,7 @@ class ModelSelector extends ConsumerWidget {
                         leading: isSelected 
                             ? const Icon(Icons.check, color: Colors.green)
                             : const SizedBox(width: 24),
-                        title: Text(model.name),
+                        title: Text(model.displayName),
                         subtitle: model.contextWindow != null
                             ? Text('Context: ${_formatNumber(model.contextWindow!)} tokens')
                             : null,

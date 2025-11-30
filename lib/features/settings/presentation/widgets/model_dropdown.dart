@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../ai_models/domain/provider_config.dart';
 import '../../../ai_models/presentation/providers/ai_provider.dart';
 
 class ModelDropdown extends ConsumerWidget {
@@ -45,7 +46,7 @@ class ModelDropdown extends ConsumerWidget {
         final modelKey = '${provider.id}:${model.id}';
         items.add(DropdownMenuItem<String?>(
           value: modelKey,
-          child: Text('${provider.name} / ${model.name}'),
+          child: Text('${provider.name} / ${model.displayName}'),
         ));
       }
     }

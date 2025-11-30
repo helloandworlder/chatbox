@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'provider_config.freezed.dart';
 part 'provider_config.g.dart';
 
+/// AI Provider 类型（预设的服务商）
 enum AIProviderType { 
   openai, 
   claude, 
@@ -14,6 +15,20 @@ enum AIProviderType {
   custom 
 }
 
+/// API 协议类型（用于 custom provider 指定 API 格式）
+enum APIProtocolType {
+  openai,   // OpenAI API 兼容
+  claude,   // Anthropic Message API
+  gemini,   // Google Gemini API
+}
+
+/// 模型类型
+enum ModelType {
+  chat,       // 聊天模型
+  embedding,  // 嵌入模型
+  rerank,     // 重排模型
+}
+
 @freezed
 class AIProviderConfig with _$AIProviderConfig {
   const factory AIProviderConfig({
@@ -22,7 +37,9 @@ class AIProviderConfig with _$AIProviderConfig {
     required String name,
     String? apiKey,
     String? baseUrl,
+    String? apiPath,  // 自定义 API 路径，如 /chat/completions
     String? apiVersion,
+    @Default(APIProtocolType.openai) APIProtocolType apiProtocol,
     @Default(true) bool enabled,
     @Default([]) List<ModelConfig> models,
   }) = _AIProviderConfig;
@@ -35,11 +52,12 @@ class AIProviderConfig with _$AIProviderConfig {
 class ModelConfig with _$ModelConfig {
   const factory ModelConfig({
     required String id,
-    required String name,
-    @Default(true) bool supportsStreaming,
+    String? nickname,  // 显示名称
+    @Default(ModelType.chat) ModelType type,
     @Default(false) bool supportsVision,
+    @Default(false) bool supportsReasoning,
     @Default(false) bool supportsFunctionCalling,
-    int? maxTokens,
+    int? maxOutputTokens,
     int? contextWindow,
   }) = _ModelConfig;
 
@@ -47,39 +65,46 @@ class ModelConfig with _$ModelConfig {
       _$ModelConfigFromJson(json);
 }
 
+/// 获取模型显示名称
+extension ModelConfigExtension on ModelConfig {
+  String get displayName => nickname ?? id;
+}
+
 // ========== 内置提供商配置 ==========
 
 const defaultOpenAIModels = [
   ModelConfig(
     id: 'gpt-4o',
-    name: 'GPT-4o',
+    nickname: 'GPT-4o',
     supportsVision: true,
     supportsFunctionCalling: true,
     contextWindow: 128000,
   ),
   ModelConfig(
     id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini',
+    nickname: 'GPT-4o Mini',
     supportsVision: true,
     supportsFunctionCalling: true,
     contextWindow: 128000,
   ),
   ModelConfig(
     id: 'o1',
-    name: 'o1',
+    nickname: 'o1',
     supportsVision: true,
+    supportsReasoning: true,
     supportsFunctionCalling: true,
     contextWindow: 200000,
   ),
   ModelConfig(
     id: 'o1-mini',
-    name: 'o1 Mini',
+    nickname: 'o1 Mini',
+    supportsReasoning: true,
     supportsFunctionCalling: true,
     contextWindow: 128000,
   ),
   ModelConfig(
     id: 'gpt-4-turbo',
-    name: 'GPT-4 Turbo',
+    nickname: 'GPT-4 Turbo',
     supportsVision: true,
     supportsFunctionCalling: true,
     contextWindow: 128000,
@@ -89,28 +114,28 @@ const defaultOpenAIModels = [
 const defaultClaudeModels = [
   ModelConfig(
     id: 'claude-sonnet-4-20250514',
-    name: 'Claude Sonnet 4',
+    nickname: 'Claude Sonnet 4',
     supportsVision: true,
     supportsFunctionCalling: true,
     contextWindow: 200000,
   ),
   ModelConfig(
     id: 'claude-3-5-sonnet-20241022',
-    name: 'Claude 3.5 Sonnet',
+    nickname: 'Claude 3.5 Sonnet',
     supportsVision: true,
     supportsFunctionCalling: true,
     contextWindow: 200000,
   ),
   ModelConfig(
     id: 'claude-3-5-haiku-20241022',
-    name: 'Claude 3.5 Haiku',
+    nickname: 'Claude 3.5 Haiku',
     supportsVision: true,
     supportsFunctionCalling: true,
     contextWindow: 200000,
   ),
   ModelConfig(
     id: 'claude-3-opus-20240229',
-    name: 'Claude 3 Opus',
+    nickname: 'Claude 3 Opus',
     supportsVision: true,
     supportsFunctionCalling: true,
     contextWindow: 200000,
@@ -121,28 +146,30 @@ const defaultClaudeModels = [
 const defaultGeminiModels = [
   ModelConfig(
     id: 'gemini-2.5-pro-preview-06-05',
-    name: 'Gemini 2.5 Pro',
+    nickname: 'Gemini 2.5 Pro',
     supportsVision: true,
+    supportsReasoning: true,
     supportsFunctionCalling: true,
     contextWindow: 1048576,
   ),
   ModelConfig(
     id: 'gemini-2.5-flash-preview-05-20',
-    name: 'Gemini 2.5 Flash',
+    nickname: 'Gemini 2.5 Flash',
     supportsVision: true,
+    supportsReasoning: true,
     supportsFunctionCalling: true,
     contextWindow: 1048576,
   ),
   ModelConfig(
     id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
+    nickname: 'Gemini 2.0 Flash',
     supportsVision: true,
     supportsFunctionCalling: true,
     contextWindow: 1048576,
   ),
   ModelConfig(
     id: 'gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro',
+    nickname: 'Gemini 1.5 Pro',
     supportsVision: true,
     supportsFunctionCalling: true,
     contextWindow: 2000000,
@@ -152,13 +179,14 @@ const defaultGeminiModels = [
 const defaultDeepSeekModels = [
   ModelConfig(
     id: 'deepseek-chat',
-    name: 'DeepSeek V3',
+    nickname: 'DeepSeek V3',
     supportsFunctionCalling: true,
     contextWindow: 64000,
   ),
   ModelConfig(
     id: 'deepseek-reasoner',
-    name: 'DeepSeek R1',
+    nickname: 'DeepSeek R1',
+    supportsReasoning: true,
     contextWindow: 64000,
   ),
 ];
@@ -167,35 +195,35 @@ const defaultDeepSeekModels = [
 const defaultOpenRouterModels = [
   ModelConfig(
     id: 'openai/gpt-4o',
-    name: 'GPT-4o (via OpenRouter)',
+    nickname: 'GPT-4o (via OpenRouter)',
     supportsVision: true,
     supportsFunctionCalling: true,
   ),
   ModelConfig(
     id: 'anthropic/claude-3.5-sonnet',
-    name: 'Claude 3.5 Sonnet (via OpenRouter)',
+    nickname: 'Claude 3.5 Sonnet (via OpenRouter)',
     supportsVision: true,
     supportsFunctionCalling: true,
   ),
   ModelConfig(
     id: 'google/gemini-2.0-flash-001',
-    name: 'Gemini 2.0 Flash (via OpenRouter)',
+    nickname: 'Gemini 2.0 Flash (via OpenRouter)',
     supportsVision: true,
     supportsFunctionCalling: true,
   ),
   ModelConfig(
     id: 'deepseek/deepseek-chat-v3-0324',
-    name: 'DeepSeek V3 (via OpenRouter)',
+    nickname: 'DeepSeek V3 (via OpenRouter)',
     supportsFunctionCalling: true,
   ),
   ModelConfig(
     id: 'meta-llama/llama-3.3-70b-instruct',
-    name: 'Llama 3.3 70B (via OpenRouter)',
+    nickname: 'Llama 3.3 70B (via OpenRouter)',
     supportsFunctionCalling: true,
   ),
   ModelConfig(
     id: 'qwen/qwen-2.5-72b-instruct',
-    name: 'Qwen 2.5 72B (via OpenRouter)',
+    nickname: 'Qwen 2.5 72B (via OpenRouter)',
     supportsFunctionCalling: true,
   ),
 ];
@@ -203,22 +231,23 @@ const defaultOpenRouterModels = [
 const defaultOllamaModels = [
   ModelConfig(
     id: 'llama3.3',
-    name: 'Llama 3.3',
+    nickname: 'Llama 3.3',
     contextWindow: 131072,
   ),
   ModelConfig(
     id: 'qwen2.5',
-    name: 'Qwen 2.5',
+    nickname: 'Qwen 2.5',
     contextWindow: 131072,
   ),
   ModelConfig(
     id: 'deepseek-r1',
-    name: 'DeepSeek R1',
+    nickname: 'DeepSeek R1',
+    supportsReasoning: true,
     contextWindow: 65536,
   ),
   ModelConfig(
     id: 'gemma2',
-    name: 'Gemma 2',
+    nickname: 'Gemma 2',
     contextWindow: 8192,
   ),
 ];

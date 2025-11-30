@@ -7,6 +7,7 @@ import '../../../../core/storage/database/app_database.dart';
 import '../../../settings/presentation/providers/app_settings_provider.dart';
 import '../providers/chat_provider.dart';
 import 'markdown/markdown_renderer.dart';
+import 'thinking_block.dart';
 
 class MessageItem extends ConsumerWidget {
   final Message message;
@@ -89,6 +90,7 @@ class MessageItem extends ConsumerWidget {
           ],
         );
       }
+      // 流式响应时实时显示（包括 <think> 标签）
       return _buildMarkdown(context, streamingContent, ref);
     }
     
@@ -113,6 +115,15 @@ class MessageItem extends ConsumerWidget {
     return _buildMessageContent(context, ref);
   }
 
+  /// 构建带思考内容折叠的 Markdown
+  Widget _buildMarkdownWithThinking(BuildContext context, String content, WidgetRef ref) {
+    return MessageWithThinking(
+      content: content,
+      isStreaming: false,
+      contentBuilder: (c) => _buildMarkdown(context, c, ref),
+    );
+  }
+
   Widget _buildMessageContent(BuildContext context, WidgetRef ref) {
     try {
       final List<dynamic> contentParts = json.decode(message.contentJson);
@@ -132,7 +143,12 @@ class MessageItem extends ConsumerWidget {
             }
             final text = part['text'] as String;
             if (text.isNotEmpty) {
-              widgets.add(_buildMarkdown(context, text, ref));
+              // 对 assistant 消息处理 <think> 标签
+              if (message.role == 'assistant') {
+                widgets.add(_buildMarkdownWithThinking(context, text, ref));
+              } else {
+                widgets.add(_buildMarkdown(context, text, ref));
+              }
             }
             break;
           case 'image':

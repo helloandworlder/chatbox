@@ -31,6 +31,7 @@ final messagesProvider =
 final isGeneratingProvider = StateProvider<bool>((ref) => false);
 final streamingMessageIdProvider = StateProvider<String?>((ref) => null);
 final streamingContentProvider = StateProvider<String>((ref) => '');
+final isCancelledProvider = StateProvider<bool>((ref) => false);
 
 final chatActionsProvider = Provider((ref) => ChatActions(ref));
 
@@ -38,6 +39,7 @@ class ChatActions {
   final Ref _ref;
   final _uuid = const Uuid();
   StreamSubscription? _streamSubscription;
+  bool _isCancelled = false;
 
   ChatActions(this._ref);
 
@@ -310,6 +312,8 @@ After using a tool, wait for the result before continuing.
     // 5. Stream response
     final llm = _ref.read(llmServiceProvider);
     String fullContent = '';
+    _isCancelled = false;
+    _ref.read(isCancelledProvider.notifier).state = false;
 
     try {
       final stream = llm.streamChat(
@@ -319,6 +323,11 @@ After using a tool, wait for the result before continuing.
       );
 
       await for (final chunk in stream) {
+        // 检查是否已取消
+        if (_isCancelled) {
+          break;
+        }
+
         if (chunk.text != null) {
           fullContent += chunk.text!;
           _ref.read(streamingContentProvider.notifier).state = fullContent;
@@ -329,8 +338,26 @@ After using a tool, wait for the result before continuing.
         }
       }
 
+      // 如果被取消，保存已生成的内容
+      if (_isCancelled) {
+        final cancelledContent = fullContent.isNotEmpty 
+            ? '$fullContent\n\n[Generation cancelled]'
+            : '[Generation cancelled]';
+        final escapedContent = jsonEncode(cancelledContent);
+        await _db.updateMessage(MessagesCompanion(
+          id: Value(assistantMsgId),
+          sessionId: Value(sessionId),
+          role: const Value('assistant'),
+          contentJson: Value('[{"type":"text","text":$escapedContent}]'),
+          model: Value('$providerId:$modelId'),
+          generating: const Value(false),
+          createdAt: Value(DateTime.now()),
+        ));
+        return;
+      }
+
       // 5.1 Check for MCP tool calls in response
-      if (mcpTools.isNotEmpty) {
+      if (mcpTools.isNotEmpty && !_isCancelled) {
         final toolCallResult = await _handleMcpToolCalls(
           fullContent, 
           providerId,
@@ -364,6 +391,23 @@ After using a tool, wait for the result before continuing.
         await updateSessionName(sessionId, sessionName);
       }
     } catch (e) {
+      // 如果是取消导致的异常，不显示错误
+      if (_isCancelled) {
+        final cancelledContent = fullContent.isNotEmpty 
+            ? '$fullContent\n\n[Generation cancelled]'
+            : '[Generation cancelled]';
+        final escapedContent = jsonEncode(cancelledContent);
+        await _db.updateMessage(MessagesCompanion(
+          id: Value(assistantMsgId),
+          sessionId: Value(sessionId),
+          role: const Value('assistant'),
+          contentJson: Value('[{"type":"text","text":$escapedContent}]'),
+          model: Value('$providerId:$modelId'),
+          generating: const Value(false),
+          createdAt: Value(DateTime.now()),
+        ));
+        return;
+      }
       // Save error message
       final errorContent = jsonEncode('Error: ${e.toString()}');
       await _db.updateMessage(MessagesCompanion(
@@ -380,13 +424,16 @@ After using a tool, wait for the result before continuing.
       _ref.read(isGeneratingProvider.notifier).state = false;
       _ref.read(streamingMessageIdProvider.notifier).state = null;
       _ref.read(streamingContentProvider.notifier).state = '';
+      _isCancelled = false;
     }
   }
 
+  /// 停止当前生成
   void stopGeneration() {
+    _isCancelled = true;
+    _ref.read(isCancelledProvider.notifier).state = true;
     _streamSubscription?.cancel();
     _streamSubscription = null;
-    _ref.read(isGeneratingProvider.notifier).state = false;
   }
 
   List<ChatMessage> _convertToChatMessages(List<Message> messages) {

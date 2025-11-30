@@ -25,7 +25,10 @@ mixin _$AIProviderConfig {
   String get name => throw _privateConstructorUsedError;
   String? get apiKey => throw _privateConstructorUsedError;
   String? get baseUrl => throw _privateConstructorUsedError;
+  String? get apiPath =>
+      throw _privateConstructorUsedError; // 自定义 API 路径，如 /chat/completions
   String? get apiVersion => throw _privateConstructorUsedError;
+  APIProtocolType get apiProtocol => throw _privateConstructorUsedError;
   bool get enabled => throw _privateConstructorUsedError;
   List<ModelConfig> get models => throw _privateConstructorUsedError;
 
@@ -47,7 +50,9 @@ abstract class $AIProviderConfigCopyWith<$Res> {
       String name,
       String? apiKey,
       String? baseUrl,
+      String? apiPath,
       String? apiVersion,
+      APIProtocolType apiProtocol,
       bool enabled,
       List<ModelConfig> models});
 }
@@ -70,7 +75,9 @@ class _$AIProviderConfigCopyWithImpl<$Res, $Val extends AIProviderConfig>
     Object? name = null,
     Object? apiKey = freezed,
     Object? baseUrl = freezed,
+    Object? apiPath = freezed,
     Object? apiVersion = freezed,
+    Object? apiProtocol = null,
     Object? enabled = null,
     Object? models = null,
   }) {
@@ -95,10 +102,18 @@ class _$AIProviderConfigCopyWithImpl<$Res, $Val extends AIProviderConfig>
           ? _value.baseUrl
           : baseUrl // ignore: cast_nullable_to_non_nullable
               as String?,
+      apiPath: freezed == apiPath
+          ? _value.apiPath
+          : apiPath // ignore: cast_nullable_to_non_nullable
+              as String?,
       apiVersion: freezed == apiVersion
           ? _value.apiVersion
           : apiVersion // ignore: cast_nullable_to_non_nullable
               as String?,
+      apiProtocol: null == apiProtocol
+          ? _value.apiProtocol
+          : apiProtocol // ignore: cast_nullable_to_non_nullable
+              as APIProtocolType,
       enabled: null == enabled
           ? _value.enabled
           : enabled // ignore: cast_nullable_to_non_nullable
@@ -125,7 +140,9 @@ abstract class _$$AIProviderConfigImplCopyWith<$Res>
       String name,
       String? apiKey,
       String? baseUrl,
+      String? apiPath,
       String? apiVersion,
+      APIProtocolType apiProtocol,
       bool enabled,
       List<ModelConfig> models});
 }
@@ -146,7 +163,9 @@ class __$$AIProviderConfigImplCopyWithImpl<$Res>
     Object? name = null,
     Object? apiKey = freezed,
     Object? baseUrl = freezed,
+    Object? apiPath = freezed,
     Object? apiVersion = freezed,
+    Object? apiProtocol = null,
     Object? enabled = null,
     Object? models = null,
   }) {
@@ -171,10 +190,18 @@ class __$$AIProviderConfigImplCopyWithImpl<$Res>
           ? _value.baseUrl
           : baseUrl // ignore: cast_nullable_to_non_nullable
               as String?,
+      apiPath: freezed == apiPath
+          ? _value.apiPath
+          : apiPath // ignore: cast_nullable_to_non_nullable
+              as String?,
       apiVersion: freezed == apiVersion
           ? _value.apiVersion
           : apiVersion // ignore: cast_nullable_to_non_nullable
               as String?,
+      apiProtocol: null == apiProtocol
+          ? _value.apiProtocol
+          : apiProtocol // ignore: cast_nullable_to_non_nullable
+              as APIProtocolType,
       enabled: null == enabled
           ? _value.enabled
           : enabled // ignore: cast_nullable_to_non_nullable
@@ -196,7 +223,9 @@ class _$AIProviderConfigImpl implements _AIProviderConfig {
       required this.name,
       this.apiKey,
       this.baseUrl,
+      this.apiPath,
       this.apiVersion,
+      this.apiProtocol = APIProtocolType.openai,
       this.enabled = true,
       final List<ModelConfig> models = const []})
       : _models = models;
@@ -215,7 +244,13 @@ class _$AIProviderConfigImpl implements _AIProviderConfig {
   @override
   final String? baseUrl;
   @override
+  final String? apiPath;
+// 自定义 API 路径，如 /chat/completions
+  @override
   final String? apiVersion;
+  @override
+  @JsonKey()
+  final APIProtocolType apiProtocol;
   @override
   @JsonKey()
   final bool enabled;
@@ -230,7 +265,7 @@ class _$AIProviderConfigImpl implements _AIProviderConfig {
 
   @override
   String toString() {
-    return 'AIProviderConfig(id: $id, type: $type, name: $name, apiKey: $apiKey, baseUrl: $baseUrl, apiVersion: $apiVersion, enabled: $enabled, models: $models)';
+    return 'AIProviderConfig(id: $id, type: $type, name: $name, apiKey: $apiKey, baseUrl: $baseUrl, apiPath: $apiPath, apiVersion: $apiVersion, apiProtocol: $apiProtocol, enabled: $enabled, models: $models)';
   }
 
   @override
@@ -243,16 +278,29 @@ class _$AIProviderConfigImpl implements _AIProviderConfig {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.apiKey, apiKey) || other.apiKey == apiKey) &&
             (identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl) &&
+            (identical(other.apiPath, apiPath) || other.apiPath == apiPath) &&
             (identical(other.apiVersion, apiVersion) ||
                 other.apiVersion == apiVersion) &&
+            (identical(other.apiProtocol, apiProtocol) ||
+                other.apiProtocol == apiProtocol) &&
             (identical(other.enabled, enabled) || other.enabled == enabled) &&
             const DeepCollectionEquality().equals(other._models, _models));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, type, name, apiKey, baseUrl,
-      apiVersion, enabled, const DeepCollectionEquality().hash(_models));
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      type,
+      name,
+      apiKey,
+      baseUrl,
+      apiPath,
+      apiVersion,
+      apiProtocol,
+      enabled,
+      const DeepCollectionEquality().hash(_models));
 
   @JsonKey(ignore: true)
   @override
@@ -276,7 +324,9 @@ abstract class _AIProviderConfig implements AIProviderConfig {
       required final String name,
       final String? apiKey,
       final String? baseUrl,
+      final String? apiPath,
       final String? apiVersion,
+      final APIProtocolType apiProtocol,
       final bool enabled,
       final List<ModelConfig> models}) = _$AIProviderConfigImpl;
 
@@ -294,7 +344,11 @@ abstract class _AIProviderConfig implements AIProviderConfig {
   @override
   String? get baseUrl;
   @override
+  String? get apiPath;
+  @override // 自定义 API 路径，如 /chat/completions
   String? get apiVersion;
+  @override
+  APIProtocolType get apiProtocol;
   @override
   bool get enabled;
   @override
@@ -312,11 +366,12 @@ ModelConfig _$ModelConfigFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$ModelConfig {
   String get id => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
-  bool get supportsStreaming => throw _privateConstructorUsedError;
+  String? get nickname => throw _privateConstructorUsedError; // 显示名称
+  ModelType get type => throw _privateConstructorUsedError;
   bool get supportsVision => throw _privateConstructorUsedError;
+  bool get supportsReasoning => throw _privateConstructorUsedError;
   bool get supportsFunctionCalling => throw _privateConstructorUsedError;
-  int? get maxTokens => throw _privateConstructorUsedError;
+  int? get maxOutputTokens => throw _privateConstructorUsedError;
   int? get contextWindow => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -333,11 +388,12 @@ abstract class $ModelConfigCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
-      String name,
-      bool supportsStreaming,
+      String? nickname,
+      ModelType type,
       bool supportsVision,
+      bool supportsReasoning,
       bool supportsFunctionCalling,
-      int? maxTokens,
+      int? maxOutputTokens,
       int? contextWindow});
 }
 
@@ -355,11 +411,12 @@ class _$ModelConfigCopyWithImpl<$Res, $Val extends ModelConfig>
   @override
   $Res call({
     Object? id = null,
-    Object? name = null,
-    Object? supportsStreaming = null,
+    Object? nickname = freezed,
+    Object? type = null,
     Object? supportsVision = null,
+    Object? supportsReasoning = null,
     Object? supportsFunctionCalling = null,
-    Object? maxTokens = freezed,
+    Object? maxOutputTokens = freezed,
     Object? contextWindow = freezed,
   }) {
     return _then(_value.copyWith(
@@ -367,25 +424,29 @@ class _$ModelConfigCopyWithImpl<$Res, $Val extends ModelConfig>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      supportsStreaming: null == supportsStreaming
-          ? _value.supportsStreaming
-          : supportsStreaming // ignore: cast_nullable_to_non_nullable
-              as bool,
+      nickname: freezed == nickname
+          ? _value.nickname
+          : nickname // ignore: cast_nullable_to_non_nullable
+              as String?,
+      type: null == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as ModelType,
       supportsVision: null == supportsVision
           ? _value.supportsVision
           : supportsVision // ignore: cast_nullable_to_non_nullable
+              as bool,
+      supportsReasoning: null == supportsReasoning
+          ? _value.supportsReasoning
+          : supportsReasoning // ignore: cast_nullable_to_non_nullable
               as bool,
       supportsFunctionCalling: null == supportsFunctionCalling
           ? _value.supportsFunctionCalling
           : supportsFunctionCalling // ignore: cast_nullable_to_non_nullable
               as bool,
-      maxTokens: freezed == maxTokens
-          ? _value.maxTokens
-          : maxTokens // ignore: cast_nullable_to_non_nullable
+      maxOutputTokens: freezed == maxOutputTokens
+          ? _value.maxOutputTokens
+          : maxOutputTokens // ignore: cast_nullable_to_non_nullable
               as int?,
       contextWindow: freezed == contextWindow
           ? _value.contextWindow
@@ -405,11 +466,12 @@ abstract class _$$ModelConfigImplCopyWith<$Res>
   @useResult
   $Res call(
       {String id,
-      String name,
-      bool supportsStreaming,
+      String? nickname,
+      ModelType type,
       bool supportsVision,
+      bool supportsReasoning,
       bool supportsFunctionCalling,
-      int? maxTokens,
+      int? maxOutputTokens,
       int? contextWindow});
 }
 
@@ -425,11 +487,12 @@ class __$$ModelConfigImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? name = null,
-    Object? supportsStreaming = null,
+    Object? nickname = freezed,
+    Object? type = null,
     Object? supportsVision = null,
+    Object? supportsReasoning = null,
     Object? supportsFunctionCalling = null,
-    Object? maxTokens = freezed,
+    Object? maxOutputTokens = freezed,
     Object? contextWindow = freezed,
   }) {
     return _then(_$ModelConfigImpl(
@@ -437,25 +500,29 @@ class __$$ModelConfigImplCopyWithImpl<$Res>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      supportsStreaming: null == supportsStreaming
-          ? _value.supportsStreaming
-          : supportsStreaming // ignore: cast_nullable_to_non_nullable
-              as bool,
+      nickname: freezed == nickname
+          ? _value.nickname
+          : nickname // ignore: cast_nullable_to_non_nullable
+              as String?,
+      type: null == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as ModelType,
       supportsVision: null == supportsVision
           ? _value.supportsVision
           : supportsVision // ignore: cast_nullable_to_non_nullable
+              as bool,
+      supportsReasoning: null == supportsReasoning
+          ? _value.supportsReasoning
+          : supportsReasoning // ignore: cast_nullable_to_non_nullable
               as bool,
       supportsFunctionCalling: null == supportsFunctionCalling
           ? _value.supportsFunctionCalling
           : supportsFunctionCalling // ignore: cast_nullable_to_non_nullable
               as bool,
-      maxTokens: freezed == maxTokens
-          ? _value.maxTokens
-          : maxTokens // ignore: cast_nullable_to_non_nullable
+      maxOutputTokens: freezed == maxOutputTokens
+          ? _value.maxOutputTokens
+          : maxOutputTokens // ignore: cast_nullable_to_non_nullable
               as int?,
       contextWindow: freezed == contextWindow
           ? _value.contextWindow
@@ -470,11 +537,12 @@ class __$$ModelConfigImplCopyWithImpl<$Res>
 class _$ModelConfigImpl implements _ModelConfig {
   const _$ModelConfigImpl(
       {required this.id,
-      required this.name,
-      this.supportsStreaming = true,
+      this.nickname,
+      this.type = ModelType.chat,
       this.supportsVision = false,
+      this.supportsReasoning = false,
       this.supportsFunctionCalling = false,
-      this.maxTokens,
+      this.maxOutputTokens,
       this.contextWindow});
 
   factory _$ModelConfigImpl.fromJson(Map<String, dynamic> json) =>
@@ -483,24 +551,28 @@ class _$ModelConfigImpl implements _ModelConfig {
   @override
   final String id;
   @override
-  final String name;
+  final String? nickname;
+// 显示名称
   @override
   @JsonKey()
-  final bool supportsStreaming;
+  final ModelType type;
   @override
   @JsonKey()
   final bool supportsVision;
   @override
   @JsonKey()
+  final bool supportsReasoning;
+  @override
+  @JsonKey()
   final bool supportsFunctionCalling;
   @override
-  final int? maxTokens;
+  final int? maxOutputTokens;
   @override
   final int? contextWindow;
 
   @override
   String toString() {
-    return 'ModelConfig(id: $id, name: $name, supportsStreaming: $supportsStreaming, supportsVision: $supportsVision, supportsFunctionCalling: $supportsFunctionCalling, maxTokens: $maxTokens, contextWindow: $contextWindow)';
+    return 'ModelConfig(id: $id, nickname: $nickname, type: $type, supportsVision: $supportsVision, supportsReasoning: $supportsReasoning, supportsFunctionCalling: $supportsFunctionCalling, maxOutputTokens: $maxOutputTokens, contextWindow: $contextWindow)';
   }
 
   @override
@@ -509,24 +581,34 @@ class _$ModelConfigImpl implements _ModelConfig {
         (other.runtimeType == runtimeType &&
             other is _$ModelConfigImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.supportsStreaming, supportsStreaming) ||
-                other.supportsStreaming == supportsStreaming) &&
+            (identical(other.nickname, nickname) ||
+                other.nickname == nickname) &&
+            (identical(other.type, type) || other.type == type) &&
             (identical(other.supportsVision, supportsVision) ||
                 other.supportsVision == supportsVision) &&
+            (identical(other.supportsReasoning, supportsReasoning) ||
+                other.supportsReasoning == supportsReasoning) &&
             (identical(
                     other.supportsFunctionCalling, supportsFunctionCalling) ||
                 other.supportsFunctionCalling == supportsFunctionCalling) &&
-            (identical(other.maxTokens, maxTokens) ||
-                other.maxTokens == maxTokens) &&
+            (identical(other.maxOutputTokens, maxOutputTokens) ||
+                other.maxOutputTokens == maxOutputTokens) &&
             (identical(other.contextWindow, contextWindow) ||
                 other.contextWindow == contextWindow));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, supportsStreaming,
-      supportsVision, supportsFunctionCalling, maxTokens, contextWindow);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      nickname,
+      type,
+      supportsVision,
+      supportsReasoning,
+      supportsFunctionCalling,
+      maxOutputTokens,
+      contextWindow);
 
   @JsonKey(ignore: true)
   @override
@@ -545,11 +627,12 @@ class _$ModelConfigImpl implements _ModelConfig {
 abstract class _ModelConfig implements ModelConfig {
   const factory _ModelConfig(
       {required final String id,
-      required final String name,
-      final bool supportsStreaming,
+      final String? nickname,
+      final ModelType type,
       final bool supportsVision,
+      final bool supportsReasoning,
       final bool supportsFunctionCalling,
-      final int? maxTokens,
+      final int? maxOutputTokens,
       final int? contextWindow}) = _$ModelConfigImpl;
 
   factory _ModelConfig.fromJson(Map<String, dynamic> json) =
@@ -558,15 +641,17 @@ abstract class _ModelConfig implements ModelConfig {
   @override
   String get id;
   @override
-  String get name;
-  @override
-  bool get supportsStreaming;
+  String? get nickname;
+  @override // 显示名称
+  ModelType get type;
   @override
   bool get supportsVision;
   @override
+  bool get supportsReasoning;
+  @override
   bool get supportsFunctionCalling;
   @override
-  int? get maxTokens;
+  int? get maxOutputTokens;
   @override
   int? get contextWindow;
   @override
